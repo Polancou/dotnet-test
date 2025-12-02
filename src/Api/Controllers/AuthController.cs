@@ -6,21 +6,14 @@ namespace Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }
-
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
         {
-            var response = await _authService.LoginAsync(request);
+            var response = await authService.LoginAsync(request);
             return Ok(response);
         }
         catch (UnauthorizedAccessException)
@@ -34,7 +27,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _authService.RegisterAsync(request);
+            await authService.RegisterAsync(request);
             return Ok();
         }
         catch (InvalidOperationException ex)

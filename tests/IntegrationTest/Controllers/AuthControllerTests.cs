@@ -1,18 +1,15 @@
-using System.Net;
 using System.Net.Http.Json;
 using Application.DTOs;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Xunit;
 
 namespace IntegrationTest.Controllers;
 
-public class AuthControllerTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class AuthControllerTests(CustomWebApplicationFactory<Program> factory) : BaseIntegrationTest(factory)
 {
     [Fact]
     public async Task Register_ShouldReturnOk_WhenRequestIsValid()
     {
         // Arrange
-        var client = factory.CreateClient();
+        var client = _factory.CreateClient();
         var request = new RegisterRequest("newuser", "new@example.com", "password123");
 
         // Act

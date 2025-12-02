@@ -2,8 +2,8 @@ using Application.DTOs;
 using Application.Interfaces;
 using Application.Services;
 using Domain.Entities;
+using Domain.Enums;
 using Moq;
-using Xunit;
 
 namespace UnitTest.Services;
 
@@ -26,8 +26,8 @@ public class AuthServiceTests
     public async Task LoginAsync_ShouldReturnToken_WhenCredentialsAreValid()
     {
         // Arrange
-        var request = new LoginRequest("testuser", "password");
-        var user = new User("testuser", "test@example.com", "password", 1);
+        var request = new LoginRequest("testuser", "password123");
+        var user = new User("testuser", "test@example.com", "password123", UserRole.User);
         _userRepositoryMock.Setup(x => x.GetByUsernameAsync(request.Username)).ReturnsAsync(user);
         _jwtServiceMock.Setup(x => x.GenerateAccessToken(user)).Returns("access_token");
         _jwtServiceMock.Setup(x => x.GenerateRefreshToken()).Returns("refresh_token");
@@ -42,11 +42,29 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task RegisterAsync_ShouldRegisterUser_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var request = new RegisterRequest("testuser", "test@example.com", "password");
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(request.Username))
+            .ReturnsAsync((User?)null);
+
+        // Act
+        await _authService.RegisterAsync(request);
+
+        // Assert
+        _userRepositoryMock.Verify(x => x.AddAsync(It.Is<User>(u => 
+            u.Username == request.Username && 
+            u.Email == request.Email && 
+            u.Role == UserRole.User)), Times.Once);
+    }
+
+    [Fact]
     public async Task LoginAsync_ShouldThrowUnauthorizedAccessException_WhenCredentialsAreInvalid()
     {
         // Arrange
         var request = new LoginRequest("testuser", "wrongpassword");
-        var user = new User("testuser", "test@example.com", "password", 1);
+        var user = new User("testuser", "test@example.com", "password", UserRole.User);
         _userRepositoryMock.Setup(x => x.GetByUsernameAsync(request.Username)).ReturnsAsync(user);
 
         // Act & Assert

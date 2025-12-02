@@ -1,6 +1,7 @@
 using Application.DTOs;
 using Application.Interfaces;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Services;
 
@@ -40,7 +41,7 @@ public class AuthService : IAuthService
         }
 
         // In real app, hash the password
-        var user = new User(request.Username, request.Email, request.Password, 2); // Default role 2 (User)
+        var user = new User(request.Username, request.Email, request.Password, UserRole.User); // Default role User
         await _userRepository.AddAsync(user);
         await _unitOfWork.SaveChangesAsync();
     }

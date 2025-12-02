@@ -1,18 +1,47 @@
 using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
+/// <summary>
+/// Represents a user entity in the domain.
+/// </summary>
 public class User : BaseEntity
 {
+    /// <summary>
+    /// Gets the username of the user.
+    /// </summary>
     public string Username { get; private set; }
+
+    /// <summary>
+    /// Gets the email address of the user.
+    /// </summary>
     public string Email { get; private set; }
+
+    /// <summary>
+    /// Gets the hashed password of the user.
+    /// </summary>
     public string PasswordHash { get; private set; }
-    public int RoleId { get; private set; }
-    public Role Role { get; private set; }
 
-    private User() { } // EF Core
+    /// <summary>
+    /// Gets the role assigned to the user.
+    /// </summary>
+    public UserRole Role { get; private set; }
 
-    public User(string username, string email, string passwordHash, int roleId) : base(true)
+    /// <summary>
+    /// Private constructor for EF Core.
+    /// </summary>
+    private User() { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="User"/> class.
+    /// </summary>
+    /// <param name="username">The username of the user.</param>
+    /// <param name="email">The email address of the user.</param>
+    /// <param name="passwordHash">The hashed password of the user.</param>
+    /// <param name="role">The role assigned to the user.</param>
+    /// <exception cref="ArgumentException">Thrown if username, email, or password hash is null or whitespace.</exception>
+    public User(string username, string email, string passwordHash, UserRole role) : base(true)
     {
         if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Username cannot be empty.", nameof(username));
         if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be empty.", nameof(email));
@@ -21,9 +50,14 @@ public class User : BaseEntity
         Username = username;
         Email = email;
         PasswordHash = passwordHash;
-        RoleId = roleId;
+        Role = role;
     }
 
+    /// <summary>
+    /// Updates the user's password.
+    /// </summary>
+    /// <param name="newPasswordHash">The new hashed password.</param>
+    /// <exception cref="ArgumentException">Thrown if the new password hash is null or whitespace.</exception>
     public void UpdatePassword(string newPasswordHash)
     {
         if (string.IsNullOrWhiteSpace(newPasswordHash)) throw new ArgumentException("New password hash cannot be empty.", nameof(newPasswordHash));

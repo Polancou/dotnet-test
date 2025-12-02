@@ -9,15 +9,8 @@ namespace Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class DocumentsController : ControllerBase
+public class DocumentsController(IDocumentService documentService) : ControllerBase
 {
-    private readonly IDocumentService _documentService;
-
-    public DocumentsController(IDocumentService documentService)
-    {
-        _documentService = documentService;
-    }
-
     [HttpPost("upload")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
@@ -31,7 +24,7 @@ public class DocumentsController : ControllerBase
         var content = stream.ToArray(); // In real app, pass stream directly if possible or use temp file
 
         var request = new DocumentUploadRequest(file.FileName, new MemoryStream(content), file.ContentType);
-        var response = await _documentService.UploadDocumentAsync(request, userId);
+        var response = await documentService.UploadDocumentAsync(request, userId);
 
         return Ok(response);
     }
@@ -40,7 +33,7 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> GetMyDocuments()
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        var documents = await _documentService.GetUserDocumentsAsync(userId);
+        var documents = await documentService.GetUserDocumentsAsync(userId);
         return Ok(documents);
     }
 }
