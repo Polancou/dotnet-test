@@ -1,0 +1,41 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    container_name: sqlserver
+    cap_add:
+      - SYS_PTRACE
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlvolume:/var/opt/mssql
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Api/Dockerfile
+    container_name: api
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CleanArchDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+      - Jwt__Key=${JWT_KEY}
+    ports:
+      - "5000:8080"
+    depends_on:
+      - sqlserver
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: client
+    ports:
+      - "8080:80"
+    depends_on:
+      - sqlserver
+
+volumes:
+  sqlvolume:
