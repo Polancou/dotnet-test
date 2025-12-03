@@ -53,9 +53,6 @@ public class ApplicationDbContext : DbContext
             .Property(u => u.Role)
             .HasConversion<string>();
 
-        // Seed Admin User
-        modelBuilder.Entity<User>().HasData(
-            new { Id = 1, Username = "admin", Email = "admin@example.com", PasswordHash = "Admin123!", Role = UserRole.Admin, IsActive = true, CreationDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), ModificationDate = (DateTime?)null }
-        );
+        // Admin seed moved to Program.cs
     }
 }

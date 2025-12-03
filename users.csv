@@ -1,0 +1,4 @@
+Username,Email,Password,Role
+user_bulk_1,user1@test.com,Password123!,User
+user_bulk_2,user2@test.com,Password123!,User
+admin_bulk_1,admin1@test.com,AdminPass123!,Admin

@@ -1,37 +1,58 @@
 using Application.DTOs;
 using Application.Interfaces;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Services;
 
-public class DocumentService : IDocumentService
+public class DocumentService(
+    IDocumentRepository documentRepository,
+    IUnitOfWork unitOfWork,
+    IFileStorageService fileStorageService,
+    ICsvService csvService)
+    : IDocumentService
 {
-    private readonly IDocumentRepository _documentRepository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public DocumentService(IDocumentRepository documentRepository, IUnitOfWork unitOfWork)
+    public async Task<DocumentResponse> UploadDocumentAsync(DocumentUploadRequest request, int userId, UserRole role)
     {
-        _documentRepository = documentRepository;
-        _unitOfWork = unitOfWork;
-    }
-
-    public async Task<DocumentResponse> UploadDocumentAsync(DocumentUploadRequest request, int userId)
-    {
-        // In real app, save stream to storage (AWS S3, Azure Blob, or local disk)
-        // For now, we simulate saving to a path
-        var storagePath = $"/uploads/{Guid.NewGuid()}_{request.FileName}";
+        // Save file to storage
+        var storagePath = await fileStorageService.SaveFileAsync(request.Content, request.FileName);
         
         var document = new Document(request.FileName, storagePath, request.ContentType, request.Content.Length, userId);
         
-        await _documentRepository.AddAsync(document);
-        await _unitOfWork.SaveChangesAsync();
+        // Process if needed
+        if (request.ProcessType == "UserBulk" && request.ContentType == "text/csv")
+        {
+            if (role != UserRole.Admin)
+            {
+                throw new UnauthorizedAccessException("Only admins can perform bulk user uploads.");
+            }
+            // Reset stream position if possible, or we should have copied it. 
+            // FileStorageService consumed the stream? 
+            // SaveFileAsync implementation: await fileStream.CopyToAsync(fileStreamOutput);
+            // CopyToAsync advances the position. We need to reset it or use a copy.
+            // Since request.Content is likely a MemoryStream (from Controller), we can try Seek.
+            if (request.Content.CanSeek)
+            {
+                request.Content.Position = 0;
+                var result = await csvService.ProcessUserBulkUploadAsync(request.Content);
+                var resultMessage = $"Processed: {result.SuccessCount} success, {result.FailureCount} failed. Errors: {string.Join("; ", result.Errors.Take(5))}";
+                document.MarkAsProcessed(resultMessage);
+            }
+            else
+            {
+                 document.MarkAsProcessed("Error: Stream not seekable for processing.");
+            }
+        }
+        
+        await documentRepository.AddAsync(document);
+        await unitOfWork.SaveChangesAsync();
 
         return new DocumentResponse(document.Id, document.FileName, document.ContentType, document.FileSize, document.IsProcessed, document.AnalysisResult, document.CreationDate);
     }
 
     public async Task<IEnumerable<DocumentResponse>> GetUserDocumentsAsync(int userId)
     {
-        var documents = await _documentRepository.GetByUserIdAsync(userId);
+        var documents = await documentRepository.GetByUserIdAsync(userId);
         return documents.Select(d => new DocumentResponse(d.Id, d.FileName, d.ContentType, d.FileSize, d.IsProcessed, d.AnalysisResult, d.CreationDate));
     }
 }

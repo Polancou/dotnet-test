@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { useAuthStore } from './stores/auth'
+
+const authStore = useAuthStore()
+const router = useRouter()
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -7,9 +16,15 @@ import { RouterLink, RouterView } from 'vue-router'
     <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-xl font-bold">Clean Architecture App</h1>
       <nav>
-        <RouterLink to="/" class="mr-4 hover:underline">Home</RouterLink>
-        <RouterLink to="/dashboard" class="mr-4 hover:underline">Dashboard</RouterLink>
-        <RouterLink to="/login" class="hover:underline">Login</RouterLink>
+        <template v-if="authStore.token">
+          <RouterLink to="/" class="mr-4 hover:underline">Home</RouterLink>
+          <RouterLink to="/dashboard" class="mr-4 hover:underline">Dashboard</RouterLink>
+          <button @click="handleLogout" class="hover:underline">Logout</button>
+        </template>
+        <template v-else>
+          <RouterLink to="/login" class="mr-4 hover:underline">Login</RouterLink>
+          <RouterLink to="/register" class="hover:underline">Register</RouterLink>
+        </template>
       </nav>
     </div>
   </header>

@@ -29,6 +29,16 @@ public class UserRepository(ApplicationDbContext context) : GenericRepository<Us
     {
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
+
+    /// <summary>
+    /// Asynchronously retrieves a user by their refresh token.
+    /// </summary>
+    /// <param name="refreshToken">The refresh token of the user to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the user if found, otherwise null.</returns>
+    public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+    }
 }
 
 /// <summary>

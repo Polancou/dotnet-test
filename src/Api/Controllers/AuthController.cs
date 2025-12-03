@@ -35,4 +35,20 @@ public class AuthController(IAuthService authService) : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+    {
+        try
+        {
+            var response = await authService.RefreshTokenAsync(request.RefreshToken);
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
+        }
+    }
 }
+
+public record RefreshTokenRequest(string RefreshToken);

@@ -16,6 +16,17 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        corsBuilder =>
+        {
+            corsBuilder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -60,7 +71,11 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IEventLogRepository, EventLogRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IEventLogService, EventLogService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<ICsvService, CsvService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 // Validators
 builder.Services.AddFluentValidationAutoValidation();
@@ -94,6 +109,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<Api.Middleware.ExceptionMiddleware>();
+
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -104,6 +123,33 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated(); // Simple for now, use Migrations in real prod
+}
+
+// Seed Admin User
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var userRepository = services.GetRequiredService<Application.Interfaces.IUserRepository>();
+        var passwordHasher = services.GetRequiredService<Application.Interfaces.IPasswordHasher>();
+        var unitOfWork = services.GetRequiredService<Application.Interfaces.IUnitOfWork>();
+
+        var adminUser = await userRepository.GetByUsernameAsync("admin");
+        if (adminUser == null)
+        {
+            var passwordHash = passwordHasher.Hash("Admin123!");
+            var newAdmin = new Domain.Entities.User("admin", "admin@example.com", passwordHash, Domain.Enums.UserRole.Admin);
+            await userRepository.AddAsync(newAdmin);
+            await unitOfWork.SaveChangesAsync();
+            Console.WriteLine("Admin user seeded successfully.");
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
 }
 
 app.Run();

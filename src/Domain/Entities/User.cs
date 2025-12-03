@@ -64,4 +64,25 @@ public class User : BaseEntity
         PasswordHash = newPasswordHash;
         UpdateModificationDate();
     }
+    /// <summary>
+    /// Gets the refresh token for the user.
+    /// </summary>
+    public string? RefreshToken { get; private set; }
+
+    /// <summary>
+    /// Gets the expiry time of the refresh token.
+    /// </summary>
+    public DateTime? RefreshTokenExpiryTime { get; private set; }
+
+    /// <summary>
+    /// Updates the user's refresh token.
+    /// </summary>
+    /// <param name="refreshToken">The new refresh token.</param>
+    /// <param name="expiryTime">The expiry time of the new refresh token.</param>
+    public void UpdateRefreshToken(string refreshToken, DateTime expiryTime)
+    {
+        RefreshToken = refreshToken;
+        RefreshTokenExpiryTime = expiryTime;
+        UpdateModificationDate();
+    }
 }
