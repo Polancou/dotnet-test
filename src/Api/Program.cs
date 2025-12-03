@@ -22,8 +22,8 @@ builder.Services.AddCors(options =>
         corsBuilder =>
         {
             corsBuilder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
+                .AllowAnyMethod()
+                .AllowAnyHeader();
         });
 });
 
@@ -78,7 +78,9 @@ builder.Services.AddScoped<ICsvService, CsvService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IEventNotifier, Api.Services.SignalREventNotifier>();
 builder.Services.AddScoped<IAiAnalysisService, AiAnalysisService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSignalR();
+builder.Services.AddHttpClient();
 
 // Validators
 builder.Services.AddFluentValidationAutoValidation();
@@ -143,7 +145,8 @@ using (var scope = app.Services.CreateScope())
         if (adminUser == null)
         {
             var passwordHash = passwordHasher.Hash("Admin123!");
-            var newAdmin = new Domain.Entities.User("admin", "admin@example.com", passwordHash, Domain.Enums.UserRole.Admin);
+            var newAdmin =
+                new Domain.Entities.User("admin", "admin@example.com", passwordHash, Domain.Enums.UserRole.Admin);
             await userRepository.AddAsync(newAdmin);
             await unitOfWork.SaveChangesAsync();
             Console.WriteLine("Admin user seeded successfully.");

@@ -21,6 +21,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CleanArchDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
       - Jwt__Key=${JWT_KEY}
+      - Gemini__ApiKey=${GEMINI_API_KEY}
     ports:
       - "5000:8080"
     depends_on:

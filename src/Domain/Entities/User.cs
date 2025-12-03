@@ -31,7 +31,9 @@ public class User : BaseEntity
     /// <summary>
     /// Private constructor for EF Core.
     /// </summary>
-    private User() { }
+    private User()
+    {
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="User"/> class.
@@ -43,9 +45,11 @@ public class User : BaseEntity
     /// <exception cref="ArgumentException">Thrown if username, email, or password hash is null or whitespace.</exception>
     public User(string username, string email, string passwordHash, UserRole role) : base(true)
     {
-        if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Username cannot be empty.", nameof(username));
+        if (string.IsNullOrWhiteSpace(username))
+            throw new ArgumentException("Username cannot be empty.", nameof(username));
         if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be empty.", nameof(email));
-        if (string.IsNullOrWhiteSpace(passwordHash)) throw new ArgumentException("Password hash cannot be empty.", nameof(passwordHash));
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException("Password hash cannot be empty.", nameof(passwordHash));
 
         Username = username;
         Email = email;
@@ -60,10 +64,12 @@ public class User : BaseEntity
     /// <exception cref="ArgumentException">Thrown if the new password hash is null or whitespace.</exception>
     public void UpdatePassword(string newPasswordHash)
     {
-        if (string.IsNullOrWhiteSpace(newPasswordHash)) throw new ArgumentException("New password hash cannot be empty.", nameof(newPasswordHash));
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+            throw new ArgumentException("New password hash cannot be empty.", nameof(newPasswordHash));
         PasswordHash = newPasswordHash;
         UpdateModificationDate();
     }
+
     /// <summary>
     /// Gets the refresh token for the user.
     /// </summary>
@@ -83,6 +89,16 @@ public class User : BaseEntity
     {
         RefreshToken = refreshToken;
         RefreshTokenExpiryTime = expiryTime;
+        UpdateModificationDate();
+    }
+
+    /// <summary>
+    /// Updates the user's role.
+    /// </summary>
+    /// <param name="newRole">The new role.</param>
+    public void UpdateRole(UserRole newRole)
+    {
+        Role = newRole;
         UpdateModificationDate();
     }
 }

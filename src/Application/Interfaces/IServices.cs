@@ -13,6 +13,7 @@ public interface IDocumentService
 {
     Task<DocumentResponse> UploadDocumentAsync(DocumentUploadRequest request, int userId, Domain.Enums.UserRole role);
     Task<IEnumerable<DocumentResponse>> GetUserDocumentsAsync(int userId);
+    Task UpdateAnalysisResultAsync(int documentId, string analysisResult);
 }
 
 public interface IEventLogService
@@ -28,5 +29,12 @@ public interface IEventNotifier
 
 public interface IAiAnalysisService
 {
-    Task<string> AnalyzeDocumentAsync(Stream fileStream, string fileName);
+    Task<AnalysisResultDto> AnalyzeDocumentAsync(Stream fileStream, string fileName);
+}
+
+public interface IUserService
+{
+    Task<IEnumerable<UserDto>> GetAllUsersAsync();
+    Task UpdateUserRoleAsync(int userId, Domain.Enums.UserRole newRole);
+    Task DeleteUserAsync(int userId);
 }

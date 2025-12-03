@@ -47,3 +47,35 @@ This project is a modern web application built with **.NET 9** (Backend) and **V
 
 ## 🧪 Testing
 - Run `dotnet test` to execute all tests.
+
+## ✨ Features
+
+### 🤖 AI Analysis
+- **Integration**: Uses **Google Gemini 1.5 Flash** via REST API.
+- **Capabilities**:
+    - Analyzes text documents (PDF, TXT, MD, CSV, JSON).
+    - Analyzes images (PNG, JPEG).
+    - Extracts structured data (Invoices vs. Information).
+- **Configuration**: Requires `Gemini:ApiKey` in User Secrets.
+
+### 👥 User Management (Admin Only)
+- **Role-Based Access Control (RBAC)**:
+    - **Admin**: Full access, including User Management and CSV Validation tabs.
+    - **User**: Restricted access (Dashboard, AI Analysis, Event Logs).
+- **Functionality**:
+    - List all users.
+    - Change user roles (User <-> Admin).
+    - Delete users.
+
+### 📊 CSV Validation
+- **Bulk Upload**: Upload CSV files to create multiple users at once.
+- **Validation**: Validates email format and required fields.
+- **Restriction**: Accessible only to Administrators.
+
+## ⚙️ Additional Configuration
+
+### Gemini API Key
+To enable AI analysis, set the Gemini API Key:
+```bash
+dotnet user-secrets set "Gemini:ApiKey" "YOUR_GEMINI_API_KEY" --project src/Api/Api.csproj
+```

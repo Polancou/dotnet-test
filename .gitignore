@@ -58,3 +58,34 @@ node_modules/
 
 # Environment Variables
 .env
+.env.local
+.env.*.local
+
+# Vite / Vue
+dist/
+dist-ssr/
+*.local
+.npmrc
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs
+*.njsproj
+*.sln.docstates
+
+# TypeScript
+*.tsbuildinfo
+client/package-lock.json
+
+# Uploads
+src/Api/wwwroot/uploads/

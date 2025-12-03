@@ -57,4 +57,14 @@ public class DocumentService(
         var documents = await documentRepository.GetByUserIdAsync(userId);
         return documents.Select(d => new DocumentResponse(d.Id, d.FileName, d.ContentType, d.FileSize, d.IsProcessed, d.AnalysisResult, d.CreationDate, null));
     }
+
+    public async Task UpdateAnalysisResultAsync(int documentId, string analysisResult)
+    {
+        var document = await documentRepository.GetByIdAsync(documentId);
+        if (document != null)
+        {
+            document.MarkAsProcessed(analysisResult);
+            await unitOfWork.SaveChangesAsync();
+        }
+    }
 }
