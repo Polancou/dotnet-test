@@ -26,17 +26,22 @@ export const useDocumentsStore = defineStore('documents', () => {
     async function uploadDocument(file: File, type?: string) {
         const formData = new FormData()
         formData.append('file', file)
-        if (type) formData.append('type', type)
 
         try {
             const apiUrl = import.meta.env.VITE_API_URL || '';
-            await axios.post(`${apiUrl}/api/documents/upload`, formData, {
+            let url = `${apiUrl}/api/documents/upload`;
+            if (type) {
+                url += `?type=${encodeURIComponent(type)}`;
+            }
+
+            const response = await axios.post(url, formData, {
                 headers: {
                     Authorization: `Bearer ${authStore.token}`,
                     'Content-Type': 'multipart/form-data'
                 }
             })
             await fetchDocuments() // Refresh list
+            return response.data
         } catch (error) {
             console.error('Failed to upload document', error)
             throw error

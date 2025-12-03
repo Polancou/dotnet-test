@@ -76,6 +76,9 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ICsvService, CsvService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IEventNotifier, Api.Services.SignalREventNotifier>();
+builder.Services.AddScoped<IAiAnalysisService, AiAnalysisService>();
+builder.Services.AddSignalR();
 
 // Validators
 builder.Services.AddFluentValidationAutoValidation();
@@ -117,6 +120,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<Api.Hubs.EventLogHub>("/hubs/eventLogs");
 
 // Apply migrations
 using (var scope = app.Services.CreateScope())

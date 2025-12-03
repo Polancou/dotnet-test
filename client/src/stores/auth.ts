@@ -57,7 +57,12 @@ export const useAuthStore = defineStore('auth', () => {
         (response) => response,
         async (error) => {
             const originalRequest = error.config;
-            if (error.response.status === 401 && !originalRequest._retry) {
+            if (error.response?.status === 401 && !originalRequest._retry) {
+                // Prevent infinite loop: don't retry if the failed request was already a refresh attempt
+                if (originalRequest.url?.includes('/auth/refresh')) {
+                    return Promise.reject(error);
+                }
+
                 originalRequest._retry = true;
                 try {
                     const newToken = await refresh();

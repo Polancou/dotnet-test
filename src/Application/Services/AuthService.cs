@@ -11,13 +11,15 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IEventLogService _eventLogService;
 
-    public AuthService(IUserRepository userRepository, IJwtService jwtService, IUnitOfWork unitOfWork, IPasswordHasher passwordHasher)
+    public AuthService(IUserRepository userRepository, IJwtService jwtService, IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IEventLogService eventLogService)
     {
         _userRepository = userRepository;
         _jwtService = jwtService;
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
+        _eventLogService = eventLogService;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -33,6 +35,8 @@ public class AuthService : IAuthService
 
         user.UpdateRefreshToken(refreshToken, DateTime.UtcNow.AddDays(7));
         await _unitOfWork.SaveChangesAsync();
+
+        await _eventLogService.LogEventAsync("User Interaction", $"User {user.Username} logged in.", user.Id);
 
         return new LoginResponse(accessToken, refreshToken, 15, user.Role.ToString());
     }

@@ -18,4 +18,15 @@ public interface IDocumentService
 public interface IEventLogService
 {
     Task<IEnumerable<Domain.Entities.EventLog>> GetLogsAsync(int userId, Domain.Enums.UserRole role);
+    Task LogEventAsync(string eventType, string details, int? userId = null);
+}
+
+public interface IEventNotifier
+{
+    Task NotifyAsync(string eventType, object data);
+}
+
+public interface IAiAnalysisService
+{
+    Task<string> AnalyzeDocumentAsync(Stream fileStream, string fileName);
 }

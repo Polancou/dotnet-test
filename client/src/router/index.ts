@@ -29,21 +29,10 @@ const router = createRouter({
     ]
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
     const publicPages = ['/login', '/register']
     const authRequired = !publicPages.includes(to.path)
 
-    // We can check localStorage directly for the persisted token
-    // The key depends on pinia-plugin-persistedstate config, default is store id ('auth')
-    // But we set 'token' in state. Let's assume it's stored in 'auth' key as JSON.
-    // Or simpler: check if 'token' exists in localStorage if we were using manual storage, 
-    // but now it's inside the 'auth' object in localStorage.
-    // Let's just check if the user is authenticated via store if possible, 
-    // but accessing store outside component setup might be tricky if pinia not installed yet?
-    // Pinia is installed in main.ts before router is used? No, app.use(router) is after pinia.
-    // So we can use store.
-
-    const token = localStorage.getItem('token') // Wait, I commented out manual setItem.
     // The plugin saves state to localStorage key 'auth' (store id).
     const authState = localStorage.getItem('auth')
     let loggedIn = false
