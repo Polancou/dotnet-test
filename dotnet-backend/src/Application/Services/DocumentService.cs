@@ -35,15 +35,29 @@ public class DocumentService(
     /// </exception>
     public async Task<DocumentResponse> UploadDocumentAsync(DocumentUploadRequest request, int userId, UserRole role)
     {
-        // Save the uploaded file to persistent storage and get its storage path.
-        var storagePath = await fileStorageService.SaveFileAsync(request.Content, request.FileName);
+        // Ensure stream is at the beginning and is seekable
+        if (!request.Content.CanSeek)
+        {
+            throw new InvalidOperationException("The provided stream must be seekable to determine file size.");
+        }
+        
+        request.Content.Position = 0;
+        var fileSize = request.Content.Length;
+        request.Content.Position = 0; // Reset position
 
-        // Create the document entity to be stored in the database.
-        var document = new Document(request.FileName, storagePath, request.ContentType, request.Content.Length, userId);
+        // Read the entire stream content into memory to avoid stream disposal issues
+        // This allows us to use the content multiple times (for CSV processing and file storage)
+        byte[] fileContent;
+        using (var memoryStream = new MemoryStream())
+        {
+            await request.Content.CopyToAsync(memoryStream);
+            fileContent = memoryStream.ToArray();
+        }
 
         List<string>? validationErrors = null; // Collects validation or processing errors, if any.
+        string? processingResult = null;
 
-        // Process document if it's a CSV bulk user upload.
+        // Process document FIRST if it's a CSV bulk user upload (before saving to storage)
         if (request.ProcessType == "UserBulk" && request.ContentType == "text/csv")
         {
             // Only admins are allowed to perform bulk user CSV uploads.
@@ -52,21 +66,24 @@ public class DocumentService(
                 throw new UnauthorizedAccessException("Only admins can perform bulk user uploads.");
             }
 
-            // The stream must be seekable in order to be processed.
-            if (request.Content.CanSeek)
-            {
-                request.Content.Position = 0; // Reset stream position before reading.
-                var result = await csvService.ProcessUserBulkUploadAsync(request.Content);
-                var resultMessage = $"Processed: {result.SuccessCount} success, {result.FailureCount} failed.";
-                // Mark the document as processed and attach result summary.
-                document.MarkAsProcessed(resultMessage);
-                validationErrors = result.Errors;
-            }
-            else
-            {
-                // If the input stream isn't seekable, log processing error on the document.
-                document.MarkAsProcessed("Error: Stream not seekable for processing.");
-            }
+            // Process the CSV using a new stream from the file content
+            using var csvStream = new MemoryStream(fileContent);
+            var result = await csvService.ProcessUserBulkUploadAsync(csvStream);
+            processingResult = $"Processed: {result.SuccessCount} success, {result.FailureCount} failed.";
+            validationErrors = result.Errors;
+        }
+
+        // Save the uploaded file to persistent storage using the file content
+        using var storageStream = new MemoryStream(fileContent);
+        var storagePath = await fileStorageService.SaveFileAsync(storageStream, request.FileName);
+
+        // Create the document entity to be stored in the database.
+        var document = new Document(request.FileName, storagePath, request.ContentType, fileSize, userId);
+
+        // Mark document as processed if processing was performed
+        if (processingResult != null)
+        {
+            document.MarkAsProcessed(processingResult);
         }
 
         // Persist the document metadata to the repository.

@@ -39,6 +39,13 @@ class Settings:
     
     # --- 3rd Party Services (e.g., Google Gemini AI) ---
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")  # May be None if not configured
+    
+    # --- AWS S3 Configuration ---
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+    AWS_S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
+    USE_S3_STORAGE = os.getenv("USE_S3_STORAGE", "false").lower() == "true"  # Default to local storage
 
 # Instantiate a global settings instance for import throughout the codebase.
 settings = Settings()

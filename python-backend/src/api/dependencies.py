@@ -21,6 +21,8 @@ from src.infrastructure.persistence.unit_of_work import UnitOfWork
 from src.infrastructure.services.services_impl import PasswordHasher, JwtService
 from src.config import settings
 from src.infrastructure.services.file_storage_service import FileStorageService
+from src.infrastructure.services.s3_file_storage_service import S3FileStorageService
+from src.config import settings
 from src.infrastructure.services.ai_analysis_service import AiAnalysisService
 from src.application.services.auth_service import AuthService
 from src.application.services.user_service import UserService
@@ -77,8 +79,19 @@ def get_jwt_service():
 def get_file_storage_service():
     """
     Dependency provider for FileStorageService (handles file uploads and persistence).
+    Uses S3 storage if configured, otherwise falls back to local filesystem storage.
     """
-    return FileStorageService()
+    if settings.USE_S3_STORAGE:
+        try:
+            return S3FileStorageService()
+        except (ValueError, Exception) as e:
+            # If S3 configuration is invalid, fall back to local storage
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to initialize S3 storage, falling back to local storage: {str(e)}")
+            return FileStorageService()
+    else:
+        return FileStorageService()
 
 # --- Authentication dependency ---
 

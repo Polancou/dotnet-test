@@ -37,7 +37,16 @@ The original backend implementation using **.NET 9** and **Clean Architecture**.
     dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=CleanArchDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;" --project Api/Api.csproj
     dotnet user-secrets set "Jwt:Key" "ThisIsASecretKeyForJwtTokenGeneration123!" --project Api/Api.csproj
     dotnet user-secrets set "Gemini:ApiKey" "YOUR_API_KEY" --project Api/Api.csproj
+    
+    # AWS S3 Configuration (Optional - for cloud file storage)
+    dotnet user-secrets set "Aws:AccessKeyId" "YOUR_AWS_ACCESS_KEY_ID" --project Api/Api.csproj
+    dotnet user-secrets set "Aws:SecretAccessKey" "YOUR_AWS_SECRET_ACCESS_KEY" --project Api/Api.csproj
+    dotnet user-secrets set "Aws:Region" "us-east-1" --project Api/Api.csproj
+    dotnet user-secrets set "Aws:S3BucketName" "your-bucket-name" --project Api/Api.csproj
+    dotnet user-secrets set "Aws:UseS3Storage" "true" --project Api/Api.csproj
     ```
+    
+    **Note:** If `Aws:UseS3Storage` is set to `false` or not configured, the application will use local filesystem storage instead of S3.
 
 3.  Apply Migrations:
     ```bash

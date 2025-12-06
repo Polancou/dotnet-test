@@ -74,7 +74,7 @@ class DocumentService(IDocumentService):
             Exception: If non-admin attempts user bulk upload.
         """
         # Save the file using the FileStorageService, get storage path (disk or cloud).
-        storage_path = self.file_storage_service.save_file(content, file_name)
+        storage_path = self.file_storage_service.save_file(content, file_name, content_type)
 
         # Create a Document entity but do not yet persist.
         document = Document(file_name, storage_path, content_type, len(content), user_id)

@@ -99,7 +99,33 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IEventLogService, EventLogService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+
+// Register file storage service: use S3 if configured, otherwise use local filesystem
+var useS3Storage = builder.Configuration.GetValue<bool>("Aws:UseS3Storage", false);
+if (useS3Storage)
+{
+    builder.Services.AddScoped<IFileStorageService>(serviceProvider =>
+    {
+        try
+        {
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            var logger = serviceProvider.GetService<ILogger<Infrastructure.Services.S3FileStorageService>>();
+            return new Infrastructure.Services.S3FileStorageService(configuration, logger);
+        }
+        catch (Exception ex)
+        {
+            // If S3 configuration is invalid, fall back to local storage
+            var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning(ex, "Failed to initialize S3 storage, falling back to local storage");
+            return new FileStorageService();
+        }
+    });
+}
+else
+{
+    builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+}
+
 builder.Services.AddScoped<ICsvService, CsvService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IEventNotifier, Api.Services.SignalREventNotifier>();
@@ -182,12 +208,11 @@ app.MapHub<Api.Hubs.EventLogHub>("/hubs/eventLogs");
 // Database Migration & Seeding
 // -------------------------------
 
-// Ensures the database is created on startup. For production,
-// it's recommended to use database migrations instead of EnsureCreated.
+// Apply database migrations on startup to ensure the database schema is up to date.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.EnsureCreated(); // Simple DB create for now; use migrations in production
+    await db.Database.MigrateAsync(); // Apply all pending migrations
 }
 
 // Seeds a default Admin user if one does not already exist. This is useful for initial deployments

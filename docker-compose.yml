@@ -29,6 +29,11 @@ services:
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CleanArchDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
       - Jwt__Key=${JWT_KEY}
       - Gemini__ApiKey=${GEMINI_API_KEY}
+      - Aws__AccessKeyId=${AWS_ACCESS_KEY_ID:-}
+      - Aws__SecretAccessKey=${AWS_SECRET_ACCESS_KEY:-}
+      - Aws__Region=${AWS_REGION:-us-east-1}
+      - Aws__S3BucketName=${AWS_S3_BUCKET_NAME:-}
+      - Aws__UseS3Storage=${AWS_USE_S3_STORAGE:-false}
     ports:
       - "8001:8080"
     depends_on:
@@ -46,6 +51,11 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET_KEY=${JWT_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME:-}
+      - USE_S3_STORAGE=${USE_S3_STORAGE:-false}
     ports:
       - "8001:8001"
     depends_on:

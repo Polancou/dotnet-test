@@ -22,13 +22,14 @@ class FileStorageService(IFileStorageService):
         if not os.path.exists(self.upload_directory):
             os.makedirs(self.upload_directory)
 
-    def save_file(self, file_content: bytes, file_name: str) -> str:
+    def save_file(self, file_content: bytes, file_name: str, content_type: str = None) -> str:
         """
         Save a file to the uploads directory with a unique filename.
 
         Args:
             file_content (bytes): The binary content of the file to be saved.
             file_name (str): The original name of the uploaded file.
+            content_type (str, optional): MIME content type of the file (not used in local storage).
 
         Returns:
             str: The full path to the saved file.

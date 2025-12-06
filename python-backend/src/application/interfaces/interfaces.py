@@ -217,9 +217,17 @@ class IUserService(ABC):
 # ------------------------------------------------------------------------------
 class IFileStorageService(ABC):
     @abstractmethod
-    def save_file(self, file_content: bytes, file_name: str) -> str:
+    def save_file(self, file_content: bytes, file_name: str, content_type: str = None) -> str:
         """
         Save a file with content and filename; returns the storage location or URL.
+        
+        Args:
+            file_content (bytes): The binary content of the file.
+            file_name (str): The original name of the uploaded file.
+            content_type (str, optional): MIME content type of the file.
+        
+        Returns:
+            str: The storage location or URL of the saved file.
         """
         pass
 
