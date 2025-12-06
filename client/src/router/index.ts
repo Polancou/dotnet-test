@@ -45,6 +45,8 @@ router.beforeEach((to, _from, next) => {
 
     if (authRequired && !loggedIn) {
         next('/login')
+    } else if (loggedIn && publicPages.includes(to.path)) {
+        next('/dashboard')
     } else {
         next()
     }

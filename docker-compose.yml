@@ -11,21 +11,45 @@ services:
       - "1433:1433"
     volumes:
       - sqlvolume:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/1433'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
-  api:
+  backend-dotnet:
+    profiles: ["dotnet"]
     build:
-      context: .
+      context: ./dotnet-backend
       dockerfile: src/Api/Dockerfile
-    container_name: api
+    container_name: backend-dotnet
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CleanArchDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
       - Jwt__Key=${JWT_KEY}
       - Gemini__ApiKey=${GEMINI_API_KEY}
     ports:
-      - "5000:8080"
+      - "8001:8080"
     depends_on:
       - sqlserver
+
+  backend-python:
+    profiles: ["python"]
+    build:
+      context: ./python-backend
+      dockerfile: Dockerfile
+    container_name: backend-python
+    environment:
+      - DATABASE_URL=mssql+pymssql://sa:${DB_PASSWORD}@sqlserver:1433/CleanArchDb
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    ports:
+      - "8001:8001"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
 
   client:
     build:

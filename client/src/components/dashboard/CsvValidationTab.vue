@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useDocumentsStore } from '../../stores/documents'
+import SkeletonLoader from '../SkeletonLoader.vue'
 
 const documentsStore = useDocumentsStore()
 const fileInput = ref<HTMLInputElement | null>(null)
 const validationErrors = ref<string[]>([])
 const uploadSuccess = ref(false)
+const loading = ref(false)
 
 function triggerUpload() {
     fileInput.value?.click()
@@ -14,6 +16,7 @@ function triggerUpload() {
 async function handleFileUpload(event: Event) {
     const target = event.target as HTMLInputElement
     if (target.files && target.files.length > 0) {
+        loading.value = true
         try {
             validationErrors.value = []
             uploadSuccess.value = false
@@ -27,6 +30,7 @@ async function handleFileUpload(event: Event) {
         } catch (e) {
             alert('Upload failed')
         } finally {
+            loading.value = false
             // Reset input
             if (fileInput.value) fileInput.value.value = ''
         }
@@ -40,10 +44,16 @@ async function handleFileUpload(event: Event) {
         <p class="mb-4 text-gray-600">Upload a CSV file to validate and bulk import users.</p>
 
         <div class="flex items-center gap-4 mb-6">
-            <button @click="triggerUpload" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                Upload CSV
+            <button @click="triggerUpload" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                :disabled="loading">
+                {{ loading ? 'Processing...' : 'Upload CSV' }}
             </button>
             <input type="file" ref="fileInput" accept=".csv" class="hidden" @change="handleFileUpload" />
+        </div>
+
+        <div v-if="loading" class="space-y-4">
+            <SkeletonLoader className="h-12 w-full rounded-lg" />
+            <SkeletonLoader className="h-64 w-full rounded-lg" />
         </div>
 
         <div v-if="uploadSuccess" class="p-4 mb-4 text-green-700 bg-green-100 rounded">

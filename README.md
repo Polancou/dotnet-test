@@ -1,81 +1,59 @@
-# Clean Architecture .NET 9 & Vue 3 Project
+# Clean Architecture System (.NET & Python)
 
-This project is a modern web application built with **.NET 9** (Backend) and **Vue 3** (Frontend), following **Clean Architecture** principles.
+This repository contains a complete full-stack application with a **Vue 3** frontend and two alternative backend implementations: one in **.NET 9** and another in **Python (FastAPI)**. Both backends follow the **Clean Architecture** pattern and provide identical functionality.
 
-## 🚀 Technologies
+## 📦 System Components
 
-- **Backend**: .NET 9, Entity Framework Core, Azure SQL Edge (Docker), FluentValidation, JWT Authentication.
-- **Frontend**: Vue 3, Vite, Pinia, Tailwind CSS 4.
-- **Testing**: xUnit, Moq, Microsoft.AspNetCore.Mvc.Testing.
-- **Containerization**: Docker.
+| Component | Path | Description |
+|-----------|------|-------------|
+| **Frontend** | [`client/`](client/README.md) | Vue 3 + Vite + TypeScript application. |
+| **.NET Backend** | [`dotnet-backend/`](dotnet-backend/src/README.md) | ASP.NET Core 9 Clean Architecture implementation. |
+| **Python Backend** | [`python-backend/`](python-backend/README.md) | FastAPI Clean Architecture implementation. |
 
-## 📂 Project Structure
+## 🚀 Key Features
 
-- `src/Domain`: Enterprise logic and entities.
-- `src/Application`: Business logic, interfaces, and DTOs.
-- `src/Infrastructure`: External concerns (Database, Auth, File System).
-- `src/Api`: RESTful API entry point.
-- `client`: Vue 3 Frontend application.
+-   **Multi-Backend Support**: Seamlessly switch between .NET and Python backends.
+-   **Clean Architecture**: Separation of concerns (Domain, Application, Infrastructure, API).
+-   **AI Integration**: Document analysis using Google Gemini.
+-   **Authentication**: Secure JWT-based auth with Role-Based Access Control (RBAC).
+-   **User Management**: Admin dashboard for managing users and roles.
+-   **Bulk Operations**: CSV upload for bulk user creation.
 
-## 🛠️ Setup & Run
+## 🛠️ Quick Start
 
-### Prerequisites
-- .NET 9 SDK
-- Node.js & npm
-- Docker
+### 1. Choose a Backend
 
-### Backend
-1. Navigate to the root directory.
-2. Run `docker-compose up -d` (Ensure you have a `docker-compose.yml` for SQL Server).
-3. **User Secrets**:
-   ```bash
-   dotnet user-secrets init --project src/Api/Api.csproj
-   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=CleanArchDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;" --project src/Api/Api.csproj
-   dotnet user-secrets set "Jwt:Key" "ThisIsASecretKeyForJwtTokenGeneration123!" --project src/Api/Api.csproj
-   ```
-4. **Database Migration**:
-   ```bash
-   dotnet ef migrations add InitialCreate -p src/Infrastructure -s src/Api
-   dotnet ef database update -p src/Infrastructure -s src/Api
-   ```
-5. Run `dotnet run --project src/Api/Api.csproj`.
+**Option A: Run .NET Backend**
+Run with Docker Compose profile:
+```bash
+docker-compose --profile dotnet up
+```
+Or follow manual instructions in [`dotnet-backend/src/README.md`](dotnet-backend/src/README.md).
+-   Runs on `https://localhost:7001` (local) or `http://localhost:5000` (docker).
 
-### Frontend
-1. Navigate to `client`.
-2. Run `npm install`.
-3. Run `npm run dev`.
+**Option B: Run Python Backend**
+Run with Docker Compose profile:
+```bash
+docker-compose --profile python up
+```
+Or follow manual instructions in [`python-backend/README.md`](python-backend/README.md).
+-   Runs on `http://127.0.0.1:8001` (local) or `http://localhost:8001` (docker).
+
+### 2. Run the Frontend
+
+Follow instructions in [`client/README.md`](client/README.md).
+1.  `cd client`
+2.  `npm install`
+3.  `npm run dev`
+4.  Open `http://localhost:5173`.
+
+> **Note**: Ensure the frontend is pointing to the correct backend port in its configuration (default is usually set for .NET, update `.env` or proxy config if using Python).
 
 ## 🧪 Testing
-- Run `dotnet test` to execute all tests.
 
-## ✨ Features
+-   **.NET**: `dotnet test`
+-   **Python**: `python tests/test_features.py`
 
-### 🤖 AI Analysis
-- **Integration**: Uses **Google Gemini 1.5 Flash** via REST API.
-- **Capabilities**:
-    - Analyzes text documents (PDF, TXT, MD, CSV, JSON).
-    - Analyzes images (PNG, JPEG).
-    - Extracts structured data (Invoices vs. Information).
-- **Configuration**: Requires `Gemini:ApiKey` in User Secrets.
+## 📄 License
 
-### 👥 User Management (Admin Only)
-- **Role-Based Access Control (RBAC)**:
-    - **Admin**: Full access, including User Management and CSV Validation tabs.
-    - **User**: Restricted access (Dashboard, AI Analysis, Event Logs).
-- **Functionality**:
-    - List all users.
-    - Change user roles (User <-> Admin).
-    - Delete users.
-
-### 📊 CSV Validation
-- **Bulk Upload**: Upload CSV files to create multiple users at once.
-- **Validation**: Validates email format and required fields.
-- **Restriction**: Accessible only to Administrators.
-
-## ⚙️ Additional Configuration
-
-### Gemini API Key
-To enable AI analysis, set the Gemini API Key:
-```bash
-dotnet user-secrets set "Gemini:ApiKey" "YOUR_GEMINI_API_KEY" --project src/Api/Api.csproj
-```
+This project is licensed under the MIT License.

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth'
+import SkeletonLoader from '../SkeletonLoader.vue'
 
 const authStore = useAuthStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -86,6 +87,25 @@ async function handleFileUpload(event: Event) {
                 @change="handleFileUpload" />
         </div>
 
+        <div v-if="loading" class="mt-6 space-y-6">
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <SkeletonLoader className="h-4 w-32 mb-2" />
+                <SkeletonLoader className="h-8 w-48" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <SkeletonLoader className="h-6 w-24 mb-2" />
+                    <SkeletonLoader className="h-6 w-full mb-1" />
+                    <SkeletonLoader className="h-4 w-3/4" />
+                </div>
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <SkeletonLoader className="h-6 w-24 mb-2" />
+                    <SkeletonLoader className="h-6 w-full mb-1" />
+                    <SkeletonLoader className="h-4 w-3/4" />
+                </div>
+            </div>
+        </div>
+
         <div v-if="analysisResult" class="mt-6 space-y-6">
             <div class="p-4 bg-purple-50 rounded-lg border border-purple-100">
                 <span class="text-sm text-purple-600 font-semibold uppercase tracking-wider">Document Type</span>
@@ -115,12 +135,12 @@ async function handleFileUpload(event: Event) {
                     <div>
                         <span class="block text-sm text-gray-500">Date</span>
                         <span class="font-bold">{{ new Date(analysisResult.invoiceData.date).toLocaleDateString()
-                            }}</span>
+                        }}</span>
                     </div>
                     <div class="text-right">
                         <span class="block text-sm text-gray-500">Total</span>
                         <span class="text-2xl font-bold text-green-600">${{ analysisResult.invoiceData.total.toFixed(2)
-                            }}</span>
+                        }}</span>
                     </div>
                 </div>
 
@@ -140,7 +160,7 @@ async function handleFileUpload(event: Event) {
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ product.name }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-500 text-right">{{ product.quantity }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-500 text-right">${{ product.unitPrice.toFixed(2)
-                                    }}</td>
+                                }}</td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">${{
                                     product.total.toFixed(2) }}</td>
                             </tr>

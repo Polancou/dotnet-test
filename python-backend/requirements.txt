@@ -1,0 +1,27 @@
+# --------------------------------------------------------------------------------
+# Python Backend Dependencies for Clean Architecture FastAPI Project
+#
+# Each entry below specifies a third-party library required to run, develop,
+# test, or manage the Python backend. Comments explain the primary usage.
+# --------------------------------------------------------------------------------
+
+fastapi               # Main web framework for building APIs
+uvicorn               # Production ASGI server for FastAPI applications
+
+sqlalchemy            # SQL ORM for database interaction and schema definition
+pydantic              # Data validation/parsing using Python type hints (used by FastAPI)
+passlib[bcrypt]       # Secure password hashing (bcrypt algorithm included)
+pyjwt                 # JWT (JSON Web Token) encoding/decoding for authentication
+
+python-multipart      # Needed for handling file uploads (used by FastAPI)
+python-dotenv         # Loads environment variables from .env files for configuration
+pymssql               # SQL Server (MSSQL) database driver (required for SQLAlchemy + MSSQL)
+
+alembic               # Database schema migrations/versioning manager
+
+google-generativeai   # Google Gemini/GPT API client (for AI/chat integration)
+pypdf                 # PDF file parsing/processing library
+
+# --------------------------------------------------------------------------------
+# End of requirements.txt
+# --------------------------------------------------------------------------------
