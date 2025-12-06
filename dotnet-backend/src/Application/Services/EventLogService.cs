@@ -9,16 +9,17 @@ namespace Application.Services;
 /// Supports event notification and storage.
 /// </summary>
 public class EventLogService(
-    IEventLogRepository eventLogRepository, 
-    IUnitOfWork unitOfWork, 
+    IEventLogRepository eventLogRepository,
+    IUnitOfWork unitOfWork,
     IEventNotifier eventNotifier
 ) : IEventLogService
 {
     /// <summary>
     /// Retrieves event logs for the specified user, based on their role.
-    /// Only Admin users are allowed to view all event logs.
+    /// Admin users are allowed to view all event logs.
+    /// Non-admin users can only view their own event logs (filtered by userId).
     /// </summary>
-    /// <param name="userId">The ID of the user requesting the logs (currently not used for filtering).</param>
+    /// <param name="userId">The ID of the user requesting the logs (used for filtering non-admin users).</param>
     /// <param name="role">The role of the user requesting the logs.</param>
     /// <returns>An enumerable of <see cref="EventLog"/>s available to the requesting user.</returns>
     public async Task<IEnumerable<EventLog>> GetLogsAsync(int userId, UserRole role)
@@ -28,15 +29,9 @@ public class EventLogService(
         {
             return await eventLogRepository.GetAllAsync();
         }
-        
-        // If the user is not an Admin, they have no access to logs.
-        if (role != UserRole.Admin)
-        {
-             return Enumerable.Empty<EventLog>();
-        }
 
-        // The final return is unreachable due to the above logic, but kept for clarity.
-        return await eventLogRepository.GetAllAsync();
+        // Non-admin users can only see their own logs (filtered by userId).
+        return await eventLogRepository.FindAsync(log => log.UserId == userId);
     }
 
     /// <summary>
@@ -57,12 +52,12 @@ public class EventLogService(
         await unitOfWork.SaveChangesAsync();
 
         // Notify any connected clients or listeners that a new event log was created.
-        await eventNotifier.NotifyAsync("ReceiveLog", new 
-        { 
-            Id = log.Id, 
-            EventType = log.EventType, 
-            Details = log.Description, 
-            Timestamp = log.CreationDate 
+        await eventNotifier.NotifyAsync("ReceiveLog", new
+        {
+            Id = log.Id,
+            EventType = log.EventType,
+            Details = log.Description,
+            Timestamp = log.CreationDate
         });
     }
 }

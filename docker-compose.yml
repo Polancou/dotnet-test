@@ -32,7 +32,8 @@ services:
     ports:
       - "8001:8080"
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
 
   backend-python:
     profiles: ["python"]
@@ -60,8 +61,6 @@ services:
     container_name: client
     ports:
       - "8080:80"
-    depends_on:
-      - sqlserver
 
 volumes:
   sqlvolume:
