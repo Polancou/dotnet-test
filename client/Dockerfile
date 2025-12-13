@@ -6,6 +6,8 @@ RUN npm install --legacy-peer-deps
 COPY . .
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_BACKEND_TYPE
+ENV VITE_BACKEND_TYPE=$VITE_BACKEND_TYPE
 RUN npm run build
 
 # Production stage

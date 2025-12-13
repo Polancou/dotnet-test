@@ -61,3 +61,13 @@ The frontend application built with **Vue 3**, **Vite**, and **TypeScript**. It 
 ## ⚙️ Configuration
 
 By default, the client is configured to communicate with the backend. Check `.env` files if you need to switch between the .NET backend (default port often 5000/5001) and the Python backend (port 8001).
+
+## 🧪 Testing
+
+To run the client-side unit tests (using Vitest):
+
+```bash
+npm run test
+```
+
+This runs all component and logic tests defined in `src/components/__tests__/`.

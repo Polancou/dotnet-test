@@ -44,7 +44,7 @@ async def upload_document(
         # Read the file contents into memory
         content = await file.read()
         # Call the application service to handle persistence and metadata
-        return document_service.upload_document(
+        return await document_service.upload_document(
             file_name=file.filename,
             content=content,
             content_type=file.content_type,
@@ -57,7 +57,7 @@ async def upload_document(
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/", response_model=List[DocumentResponse])
-def get_my_documents(
+async def get_my_documents(
     document_service: IDocumentService = Depends(get_document_service),
     current_user: User = Depends(get_current_user)
 ):
@@ -74,4 +74,49 @@ def get_my_documents(
         List[DocumentResponse]: List of user's documents.
     """
     # Fetch all documents belonging to the current user via the service
-    return document_service.get_user_documents(current_user.id)
+    return await document_service.get_user_documents(current_user.id)
+
+@router.get("/{document_id}/download")
+async def download_document(
+    document_id: int,
+    document_service: IDocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Download a specific document.
+    """
+    try:
+        # Retrieve file stream (or body) from service
+        file_body = await document_service.download_document(document_id, current_user.id)
+        
+        # Return as a StreamingResponse
+        # Note: In a real app, you might want to look up the filename/content-type to set headers
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(file_body, media_type="application/octet-stream")
+    except Exception as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        if "authorized" in str(e).lower():
+            raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.delete("/{document_id}")
+async def delete_document(
+    document_id: int,
+    document_service: IDocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a specific document.
+    """
+    try:
+        await document_service.delete_document(document_id, current_user.id)
+        # Return 204 No Content
+        from fastapi.responses import Response
+        return Response(status_code=204)
+    except Exception as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        if "authorized" in str(e).lower():
+            raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))

@@ -6,7 +6,7 @@
 # --------------------------------------------------------------------------------
 
 fastapi               # Main web framework for building APIs
-uvicorn               # Production ASGI server for FastAPI applications
+uvicorn[standard]     # Production ASGI server for FastAPI applications (includes websockets)
 
 sqlalchemy            # SQL ORM for database interaction and schema definition
 pydantic              # Data validation/parsing using Python type hints (used by FastAPI)
@@ -22,6 +22,10 @@ alembic               # Database schema migrations/versioning manager
 google-generativeai   # Google Gemini/GPT API client (for AI/chat integration)
 pypdf                 # PDF file parsing/processing library
 boto3                 # AWS SDK for Python (for S3 file storage)
+
+# Testing
+pytest                # Testing framework
+httpx                 # HTTP client for testing FastAPI endpoints
 
 # --------------------------------------------------------------------------------
 # End of requirements.txt

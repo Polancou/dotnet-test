@@ -15,7 +15,7 @@ from src.api.dependencies import get_auth_service
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/login", response_model=LoginResponse)
-def login(request: LoginRequest, auth_service: IAuthService = Depends(get_auth_service)):
+async def login(request: LoginRequest, auth_service: IAuthService = Depends(get_auth_service)):
     """
     Authenticate a user and return a JWT access/refresh token pair.
 
@@ -31,13 +31,13 @@ def login(request: LoginRequest, auth_service: IAuthService = Depends(get_auth_s
     """
     try:
         # Attempt to authenticate the user using provided credentials
-        return auth_service.login(request)
+        return await auth_service.login(request)
     except Exception as e:
         # Authentication failed (invalid user, wrong password, etc.)
         raise HTTPException(status_code=401, detail=str(e))
 
 @router.post("/register")
-def register(request: RegisterRequest, auth_service: IAuthService = Depends(get_auth_service)):
+async def register(request: RegisterRequest, auth_service: IAuthService = Depends(get_auth_service)):
     """
     Register a new user in the system.
 
@@ -53,14 +53,14 @@ def register(request: RegisterRequest, auth_service: IAuthService = Depends(get_
     """
     try:
         # Attempt to register the new user
-        auth_service.register(request)
+        await auth_service.register(request)
         return {"message": "User registered successfully"}
     except Exception as e:
         # Registration failed (user exists, validation error, etc.)
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/refresh", response_model=LoginResponse)
-def refresh_token(request: RefreshTokenRequest, auth_service: IAuthService = Depends(get_auth_service)):
+async def refresh_token(request: RefreshTokenRequest, auth_service: IAuthService = Depends(get_auth_service)):
     """
     Refresh an access token using a valid refresh token.
 
@@ -76,7 +76,7 @@ def refresh_token(request: RefreshTokenRequest, auth_service: IAuthService = Dep
     """
     try:
         # Attempt to refresh the JWT tokens using the provided refresh token
-        return auth_service.refresh_token(request.refresh_token)
+        return await auth_service.refresh_token(request.refresh_token)
     except Exception as e:
         # Token refresh failed (invalid/expired token)
         raise HTTPException(status_code=401, detail=str(e))

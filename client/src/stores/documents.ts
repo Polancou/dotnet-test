@@ -48,5 +48,40 @@ export const useDocumentsStore = defineStore('documents', () => {
         }
     }
 
-    return { documents, loading, fetchDocuments, uploadDocument }
+    async function downloadDocument(id: number, filename: string) {
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const response = await axios.get(`${apiUrl}/api/documents/${id}/download`, {
+                headers: { Authorization: `Bearer ${authStore.token}` },
+                responseType: 'blob' // Important for file handling
+            })
+
+            // Create a blob link to download
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', filename)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+        } catch (error) {
+            console.error('Failed to download document', error)
+            throw error
+        }
+    }
+
+    async function deleteDocument(id: number) {
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            await axios.delete(`${apiUrl}/api/documents/${id}`, {
+                headers: { Authorization: `Bearer ${authStore.token}` }
+            })
+            await fetchDocuments() // Refresh list
+        } catch (error) {
+            console.error('Failed to delete document', error)
+            throw error
+        }
+    }
+
+    return { documents, loading, fetchDocuments, uploadDocument, downloadDocument, deleteDocument }
 })

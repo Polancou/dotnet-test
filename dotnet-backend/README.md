@@ -83,6 +83,12 @@ To build and run the backend as a container:
 ## 🧪 Testing
 
 Run all unit and integration tests:
+Run all unit and integration tests:
 ```bash
 dotnet test
+```
+
+To run a specific test filter:
+```bash
+dotnet test --filter "FullyQualifiedName~Namespace.Class.Method"
 ```

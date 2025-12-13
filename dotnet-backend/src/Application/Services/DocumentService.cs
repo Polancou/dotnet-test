@@ -40,7 +40,7 @@ public class DocumentService(
         {
             throw new InvalidOperationException("The provided stream must be seekable to determine file size.");
         }
-        
+
         request.Content.Position = 0;
         var fileSize = request.Content.Length;
         request.Content.Position = 0; // Reset position
@@ -117,6 +117,10 @@ public class DocumentService(
     {
         // Query repository for documents belonging to the user.
         var documents = await documentRepository.GetByUserIdAsync(userId);
+
+        // Log the document list event
+        await eventLogService.LogEventAsync("Document List", "User retrieved their document list", userId);
+
         // Project each document entity into a response DTO. No validation errors returned here (null).
         return documents.Select(d =>
             new DocumentResponse(
@@ -149,5 +153,59 @@ public class DocumentService(
             await unitOfWork.SaveChangesAsync();
         }
         // If document is not found, silently do nothing (could alternatively log/fail, not specified here).
+    }
+
+    /// <summary>
+    /// Asynchronously downloads a document after verifying the user's ownership.
+    /// </summary>
+    public async Task<(Stream Content, string ContentType, string FileName)> DownloadDocumentAsync(int documentId,
+        int userId)
+    {
+        var document = await documentRepository.GetByIdAsync(documentId);
+        if (document == null)
+        {
+            throw new KeyNotFoundException($"Document with ID {documentId} not found.");
+        }
+
+        if (document.UploadedByUserId != userId)
+        {
+            throw new UnauthorizedAccessException("You are not authorized to download this document.");
+        }
+
+        // Log the download event
+        await eventLogService.LogEventAsync("Document Download",
+            $"User downloaded document ID {documentId} ({document.FileName})", userId);
+
+        var (stream, contentType) = await fileStorageService.GetFileAsync(document.StoragePath);
+        return (stream, contentType, document.FileName);
+    }
+
+    /// <summary>
+    /// Asynchronously deletes a document and its stored file after verifying the user's ownership.
+    /// </summary>
+    public async Task DeleteDocumentAsync(int documentId, int userId)
+    {
+        var document = await documentRepository.GetByIdAsync(documentId);
+        if (document == null)
+        {
+            throw new KeyNotFoundException($"Document with ID {documentId} not found.");
+        }
+
+        // Allow deletion if user owns it. 
+        if (document.UploadedByUserId != userId)
+        {
+            throw new UnauthorizedAccessException("You are not authorized to delete this document.");
+        }
+
+        // Delete file from storage (S3) first
+        await fileStorageService.DeleteFileAsync(document.StoragePath);
+
+        // Delete metadata from repository
+        documentRepository.Remove(document);
+        await unitOfWork.SaveChangesAsync();
+
+        // Log the delete event
+        await eventLogService.LogEventAsync("Document Delete",
+            $"User deleted document ID {documentId} ({document.FileName})", userId);
     }
 }

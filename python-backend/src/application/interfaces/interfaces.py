@@ -156,10 +156,7 @@ class IJwtService(ABC):
 # ------------------------------------------------------------------------------
 class IEventLogService(ABC):
     @abstractmethod
-    def log_event(self, event_type: str, description: str, user_id: Optional[int] = None):
-        """
-        Log an event to the system with optional user association.
-        """
+    async def log_event(self, event_type: str, description: str, user_id: Optional[int] = None):
         pass
 
     @abstractmethod
@@ -174,21 +171,21 @@ class IEventLogService(ABC):
 # ------------------------------------------------------------------------------
 class IAuthService(ABC):
     @abstractmethod
-    def login(self, request: LoginRequest) -> LoginResponse:
+    async def login(self, request: LoginRequest) -> LoginResponse:
         """
         Authenticate a user and return an access/refresh token pair.
         """
         pass
 
     @abstractmethod
-    def register(self, request: RegisterRequest):
+    async def register(self, request: RegisterRequest):
         """
         Register a new user.
         """
         pass
 
     @abstractmethod
-    def refresh_token(self, token: str) -> LoginResponse:
+    async def refresh_token(self, token: str) -> LoginResponse:
         """
         Refresh the access token using a valid refresh token.
         """
@@ -231,6 +228,29 @@ class IFileStorageService(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_file(self, path: str) -> Any:
+        """
+        Retrieve a file from storage.
+
+        Args:
+            path (str): The path/key of the file to retrieve.
+
+        Returns:
+            Any: The file object or stream (implementation specific).
+        """
+        pass
+
+    @abstractmethod
+    def delete_file(self, path: str):
+        """
+        Delete a file from storage.
+
+        Args:
+            path (str): The path/key of the file to delete.
+        """
+        pass
+
 # ------------------------------------------------------------------------------
 # Interface for bulk CSV user upload processing.
 # ------------------------------------------------------------------------------
@@ -248,7 +268,7 @@ class ICsvService(ABC):
 # ------------------------------------------------------------------------------
 class IDocumentService(ABC):
     @abstractmethod
-    def upload_document(self, file_name: str, content: bytes, content_type: str,
+    async def upload_document(self, file_name: str, content: bytes, content_type: str,
                         user_id: int, role: UserRole, process_type: Optional[str] = None) -> Any:
         """
         Store a document and start processing if needed.
@@ -256,7 +276,7 @@ class IDocumentService(ABC):
         pass
 
     @abstractmethod
-    def get_user_documents(self, user_id: int) -> List[Document]:
+    async def get_user_documents(self, user_id: int) -> List[Document]:
         """
         Retrieve all documents for a specific user.
         """
@@ -269,12 +289,26 @@ class IDocumentService(ABC):
         """
         pass
 
+    @abstractmethod
+    async def download_document(self, document_id: int, user_id: int) -> Any:
+        """
+        Retrieve a document file stream for download, verifying ownership.
+        """
+        pass
+
+    @abstractmethod
+    async def delete_document(self, document_id: int, user_id: int):
+        """
+        Delete a document and its file, verifying ownership.
+        """
+        pass
+
 # ------------------------------------------------------------------------------
 # Interface for running AI-based document analysis.
 # ------------------------------------------------------------------------------
 class IAiAnalysisService(ABC):
     @abstractmethod
-    def analyze_document(self, file_content: bytes, file_name: str) -> Any:
+    async def analyze_document(self, file_content: bytes, file_name: str) -> Any:
         """
         Analyze a document using AI/ML models and return results.
         """

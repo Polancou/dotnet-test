@@ -7,12 +7,28 @@ FastAPI application entry point.
 - Sets up CORS (Cross-Origin Resource Sharing) for frontend/backend communication.
 - Includes routers for authentication, user, document, AI analysis, and event log endpoints.
 - Root endpoint available for health check or friendly API greeting.
+- WebSocket support and endpoint
 
 Author: (your name/team)
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List
+from src.infrastructure.realtime.connection_manager import connection_manager
+
+app = FastAPI(title="Clean Architecture API")
+
+app.state.connection_manager = connection_manager
+
+@app.websocket("/ws/eventlogs")
+async def websocket_endpoint(websocket: WebSocket):
+    await connection_manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        connection_manager.disconnect(websocket)
 
 # Import all route/controller modules to register API routers
 from src.infrastructure.persistence.database import create_tables
@@ -23,9 +39,6 @@ from src.api.controllers import (
     ai_analysis_controller,
     event_logs_controller
 )
-
-# FastAPI application instance
-app = FastAPI()
 
 # ---------------------------
 # Configure CORS middleware

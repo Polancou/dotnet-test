@@ -3,9 +3,9 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth'
 import SkeletonLoader from '../SkeletonLoader.vue'
+import FileDropzone from '../FileDropzone.vue'
 
 const authStore = useAuthStore()
-const fileInput = ref<HTMLInputElement | null>(null)
 const analysisResult = ref<AnalysisResult | null>(null)
 const loading = ref(false)
 
@@ -39,18 +39,13 @@ interface AnalysisResult {
     informationData?: InformationData
 }
 
-function triggerUpload() {
-    fileInput.value?.click()
-}
-
-async function handleFileUpload(event: Event) {
-    const target = event.target as HTMLInputElement
-    if (target.files && target.files.length > 0) {
+async function handleFilesSelected(files: FileList) {
+    if (files.length > 0) {
         loading.value = true
         analysisResult.value = null
 
         const formData = new FormData()
-        formData.append('file', target.files[0])
+        formData.append('file', files[0])
 
         try {
             const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -67,7 +62,6 @@ async function handleFileUpload(event: Event) {
             console.error(e)
         } finally {
             loading.value = false
-            if (fileInput.value) fileInput.value.value = ''
         }
     }
 }
@@ -78,13 +72,13 @@ async function handleFileUpload(event: Event) {
         <h3 class="text-xl font-bold mb-4">AI Analysis</h3>
         <p class="mb-4 text-gray-600">Upload a document (PDF, JPG, PNG) to analyze its content type.</p>
 
-        <div class="flex items-center gap-4 mb-6">
-            <button @click="triggerUpload"
-                class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition" :disabled="loading">
-                {{ loading ? 'Analyzing...' : 'Upload & Analyze' }}
-            </button>
-            <input type="file" ref="fileInput" accept=".pdf,.jpg,.jpeg,.png" class="hidden"
-                @change="handleFileUpload" />
+        <div class="mb-6">
+            <FileDropzone 
+                accept=".pdf,.jpg,.jpeg,.png" 
+                label="Drag and drop document (PDF, Image) here to analyze" 
+                :loading="loading"
+                @files-selected="handleFilesSelected"
+            />
         </div>
 
         <div v-if="loading" class="mt-6 space-y-6">

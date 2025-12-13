@@ -15,4 +15,20 @@ public interface IFileStorageService
     /// A task that represents the asynchronous operation, containing the path or URI of the stored file as a string.
     /// </returns>
     Task<string> SaveFileAsync(Stream fileStream, string fileName);
+
+    /// <summary>
+    /// Asynchronously retrieves a file from the storage system.
+    /// </summary>
+    /// <param name="path">The path or URI of the file to retrieve.</param>
+    /// <returns>
+    /// A tuple containing the file stream and its content type.
+    /// </returns>
+    Task<(Stream FileStream, string ContentType)> GetFileAsync(string path);
+
+    /// <summary>
+    /// Asynchronously deletes a file from the storage system.
+    /// </summary>
+    /// <param name="path">The path or URI of the file to delete.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task DeleteFileAsync(string path);
 }

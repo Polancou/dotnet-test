@@ -2,25 +2,20 @@
 import { ref } from 'vue'
 import { useDocumentsStore } from '../../stores/documents'
 import SkeletonLoader from '../SkeletonLoader.vue'
+import FileDropzone from '../FileDropzone.vue'
 
 const documentsStore = useDocumentsStore()
-const fileInput = ref<HTMLInputElement | null>(null)
 const validationErrors = ref<string[]>([])
 const uploadSuccess = ref(false)
 const loading = ref(false)
 
-function triggerUpload() {
-    fileInput.value?.click()
-}
-
-async function handleFileUpload(event: Event) {
-    const target = event.target as HTMLInputElement
-    if (target.files && target.files.length > 0) {
+async function handleFilesSelected(files: FileList) {
+    if (files.length > 0) {
         loading.value = true
         try {
             validationErrors.value = []
             uploadSuccess.value = false
-            const response = await documentsStore.uploadDocument(target.files[0], 'UserBulk')
+            const response = await documentsStore.uploadDocument(files[0], 'UserBulk')
 
             if (response.validationErrors && response.validationErrors.length > 0) {
                 validationErrors.value = response.validationErrors
@@ -31,8 +26,6 @@ async function handleFileUpload(event: Event) {
             alert('Upload failed')
         } finally {
             loading.value = false
-            // Reset input
-            if (fileInput.value) fileInput.value.value = ''
         }
     }
 }
@@ -43,12 +36,13 @@ async function handleFileUpload(event: Event) {
         <h3 class="text-xl font-bold mb-4">CSV Validation</h3>
         <p class="mb-4 text-gray-600">Upload a CSV file to validate and bulk import users.</p>
 
-        <div class="flex items-center gap-4 mb-6">
-            <button @click="triggerUpload" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                :disabled="loading">
-                {{ loading ? 'Processing...' : 'Upload CSV' }}
-            </button>
-            <input type="file" ref="fileInput" accept=".csv" class="hidden" @change="handleFileUpload" />
+        <div class="mb-6">
+            <FileDropzone 
+                accept=".csv" 
+                label="Drag and drop CSV file here or click to upload" 
+                :loading="loading"
+                @files-selected="handleFilesSelected"
+            />
         </div>
 
         <div v-if="loading" class="space-y-4">

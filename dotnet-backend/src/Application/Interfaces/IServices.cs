@@ -69,6 +69,24 @@ public interface IDocumentService
     /// <param name="analysisResult">The analysis result string to be stored.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task UpdateAnalysisResultAsync(int documentId, string analysisResult);
+
+    /// <summary>
+    /// Asynchronously downloads a document, verifying user ownership.
+    /// </summary>
+    /// <param name="documentId">The ID of the document to download.</param>
+    /// <param name="userId">The ID of the user requesting the download.</param>
+    /// <returns>
+    /// A tuple containing the file stream, content type, and file name.
+    /// </returns>
+    Task<(Stream Content, string ContentType, string FileName)> DownloadDocumentAsync(int documentId, int userId);
+
+    /// <summary>
+    /// Asynchronously deletes a document and its associated file, verifying user ownership.
+    /// </summary>
+    /// <param name="documentId">The ID of the document to delete.</param>
+    /// <param name="userId">The ID of the user requesting subtraction.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task DeleteDocumentAsync(int documentId, int userId);
 }
 
 /// <summary>

@@ -23,7 +23,7 @@ class AiAnalysisService(IAiAnalysisService):
         """
         self.event_log_service = event_log_service
 
-    async def analyze_document(self, file_content: bytes, file_name: str) -> AnalysisResultDto:
+    async def analyze_document(self, file_content: bytes, file_name: str) -> Any:
         """
         Analyze a document (image or text-based) for semantic classification (Invoice/Information) and extract data.
         Relies on Gemini API if available, otherwise uses a mock method.
@@ -39,7 +39,7 @@ class AiAnalysisService(IAiAnalysisService):
         
         # Use fallback if API key is missing
         if not api_key:
-            self.event_log_service.log_event("AI Analysis Warning", "Gemini API Key not found. Using mock.")
+            await self.event_log_service.log_event("AI Analysis Warning", "Gemini API Key not found. Using mock.")
             return await self._mock_analyze(file_name)
 
         try:
@@ -131,13 +131,13 @@ Ensure dates are valid ISO 8601 strings. Do not use markdown code blocks in resp
                 summary_text = result.information_data.summary or ""
                 log_summary = f"Info: {summary_text[:50]}..."
                 
-            self.event_log_service.log_event("AI Analysis", f"Analyzed {file_name}: {log_summary}")
+            await self.event_log_service.log_event("AI Analysis", f"Analyzed {file_name}: {log_summary}")
             
             return result
             
         except Exception as e:
             # Handle API/model errors gracefully and log failure event
-            self.event_log_service.log_event("AI Analysis Error", f"Failed to analyze {file_name}: {str(e)}")
+            await self.event_log_service.log_event("AI Analysis Error", f"Failed to analyze {file_name}: {str(e)}")
             print(f"Gemini Error: {e}")
             # Return fallback "analysis failed" info type result for visibility
             return AnalysisResultDto(

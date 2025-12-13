@@ -2,13 +2,15 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from './auth'
-import { HubConnectionBuilder, HubConnection } from '@microsoft/signalr'
+import { RealTimeService } from '../services/realtime/RealTimeService'
 
 export const useEventLogsStore = defineStore('eventlogs', () => {
     const logs = ref<any[]>([])
     const loading = ref(false)
     const authStore = useAuthStore()
-    const connection = ref<HubConnection | null>(null)
+
+
+    const isConnected = ref(false)
 
     async function fetchLogs() {
         loading.value = true
@@ -26,28 +28,38 @@ export const useEventLogsStore = defineStore('eventlogs', () => {
     }
 
     async function initializeConnection() {
-        if (connection.value) return;
+        if (isConnected.value) return;
 
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // Fallback or env
-        // Note: SignalR usually needs the base URL, not full API URL if it's relative, but here we need absolute if separate.
-        // Assuming VITE_API_URL is like http://localhost:5000
+        const provider = RealTimeService.getInstance();
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const backendType = import.meta.env.VITE_BACKEND_TYPE || 'DOTNET';
+        let connectionUrl = '';
 
-        connection.value = new HubConnectionBuilder()
-            .withUrl(`${apiUrl}/hubs/eventLogs`)
-            .withAutomaticReconnect()
-            .build();
+        if (backendType === 'PYTHON') {
+            connectionUrl = `${apiUrl}/ws/eventlogs`;
+        } else {
+            connectionUrl = `${apiUrl}/hubs/eventLogs`;
+        }
 
-        connection.value.on("ReceiveLog", (log: any) => {
-            logs.value.unshift(log); // Add to top
+        // Set up listener before connecting
+        // Note: provider.on handles multiple listeners safely (pushes to array)
+        // But we only want ONE listener for the store to update state.
+        // We should clear previous listeners if any to be safe or ensure idempotency.
+        provider.off("ReceiveLog");
+
+        provider.on("ReceiveLog", (log: any) => {
+            console.log("Received new log:", log);
+            logs.value.unshift(log);
         });
 
         try {
-            await connection.value.start();
-            console.log("SignalR Connected");
+            await provider.connect(connectionUrl, authStore.token || '');
+            isConnected.value = true;
         } catch (err) {
-            console.error("SignalR Connection Error: ", err);
+            console.error("RealTime Connection Error: ", err);
+            isConnected.value = false;
         }
     }
 
-    return { logs, loading, fetchLogs, initializeConnection }
+    return { logs, loading, fetchLogs, initializeConnection, isConnected }
 })

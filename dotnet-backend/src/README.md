@@ -17,6 +17,30 @@ The original backend implementation using **.NET 9** and **Clean Architecture**.
 -   `Domain`: Core entities and business rules.
 -   `Infrastructure`: Data access, external services implementation.
 
+## 🔥 API Capabilities
+
+The backend exposes a comprehensive RESTful API. Below are the key functional areas:
+
+### 🔐 Authentication (`/api/Auth`)
+-   **Login**: Authenticate with email/password to receive a JWT and Refresh Token.
+-   **Register**: Create a new user account.
+-   **Refresh Token**: Obtain a new JWT using a valid refresh token.
+
+### 📄 Document Management (`/api/Documents`)
+-   **Upload**: Upload files (PDF, images, etc.) to the system.
+-   **My Documents**: Retrieve a list of documents uploaded by the current user.
+
+### 🤖 AI Analysis (`/api/AiAnalysis`)
+-   **Analyze Document**: Upload a document to be processed by Google Gemini AI, extracting key insights and summaries.
+
+### 📜 Event Logs (`/api/EventLogs`)
+-   **Get Logs**: Retrieve activity logs (audit trails) for the authenticated user.
+
+### 👥 User Management (`/api/Users`) *[Admin Only]*
+-   **Get All Users**: List all registered users.
+-   **Update Role**: Change a user's role (e.g., from User to Admin).
+-   **Delete User**: Permanently remove a user account.
+
 ## 🛠️ Setup & Run
 
 ### Prerequisites

@@ -48,7 +48,7 @@ async def analyze_document(
         # 1. Upload the document, storing its metadata and content.
         #    The document is linked to the current user and marked as used for AI analysis.
         # ---------------------------------------------------------------------
-        document_response = document_service.upload_document(
+        document_response = await document_service.upload_document(
             file_name=file.filename,
             content=content,
             content_type=file.content_type,

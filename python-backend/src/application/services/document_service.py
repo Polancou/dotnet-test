@@ -44,7 +44,7 @@ class DocumentService(IDocumentService):
         self.csv_service = csv_service
         self.event_log_service = event_log_service
 
-    def upload_document(
+    async def upload_document(
         self,
         file_name: str,
         content: bytes,
@@ -101,7 +101,7 @@ class DocumentService(IDocumentService):
         self.unit_of_work.commit()
 
         # Log this document upload event for traceability/auditing.
-        self.event_log_service.log_event("Document Upload", f"User uploaded {file_name}", user_id)
+        await self.event_log_service.log_event("Document Upload", f"User uploaded {file_name}", user_id)
 
         # Prepare API/client response (serializable DTO), including any process or validation outcome.
         return DocumentResponse(
@@ -115,7 +115,7 @@ class DocumentService(IDocumentService):
             validation_errors=validation_errors,
         )
 
-    def get_user_documents(self, user_id: int) -> List[Document]:
+    async def get_user_documents(self, user_id: int) -> List[Document]:
         """
         Retrieve all documents belonging to the given user.
 
@@ -125,6 +125,9 @@ class DocumentService(IDocumentService):
         Returns:
             List[Document]: All matching documents for this user.
         """
+        # Log the document list event
+        await self.event_log_service.log_event("Document List", "User retrieved their document list", user_id)
+        
         # Query the repository for documents by user ID.
         return self.document_repository.get_by_user_id(user_id)
 
@@ -146,3 +149,43 @@ class DocumentService(IDocumentService):
             document.mark_as_processed(analysis_result)
             # Commit the update.
             self.unit_of_work.commit()
+
+    async def download_document(self, document_id: int, user_id: int) -> Any:
+        """
+        Retrieve a document file stream for download, verifying ownership.
+        """
+        document = self.document_repository.get_by_id(document_id)
+        if not document:
+             raise Exception(f"Document with ID {document_id} not found.")
+        
+        # Verify ownership (assuming user can only download their own docs)
+        if document.uploaded_by_user_id != user_id:
+             raise Exception("You are not authorized to download this document.")
+
+        # Log the download event
+        await self.event_log_service.log_event("Document Download", f"User downloaded document ID {document_id} ({document.file_name})", user_id)
+
+        # Retrieve file stream from storage
+        return self.file_storage_service.get_file(document.storage_path)
+
+    async def delete_document(self, document_id: int, user_id: int):
+        """
+        Delete a document and its file, verifying ownership.
+        """
+        document = self.document_repository.get_by_id(document_id)
+        if not document:
+             raise Exception(f"Document with ID {document_id} not found.")
+
+        # Verify ownership
+        if document.uploaded_by_user_id != user_id:
+             raise Exception("You are not authorized to delete this document.")
+
+        # Delete from storage first
+        self.file_storage_service.delete_file(document.storage_path)
+
+        # Remove from repository/DB
+        self.document_repository.remove(document)
+        self.unit_of_work.commit()
+
+        # Log the delete event
+        await self.event_log_service.log_event("Document Delete", f"User deleted document ID {document_id} ({document.file_name})", user_id)

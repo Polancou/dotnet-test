@@ -44,7 +44,7 @@ class AuthService(IAuthService):
         self.password_hasher = password_hasher
         self.event_log_service = event_log_service
 
-    def login(self, request: LoginRequest) -> LoginResponse:
+    async def login(self, request: LoginRequest) -> LoginResponse:
         """
         Authenticates the user and issues new JWT & refresh tokens.
 
@@ -75,7 +75,7 @@ class AuthService(IAuthService):
         self.unit_of_work.commit()
 
         # Log successful login
-        self.event_log_service.log_event(
+        await self.event_log_service.log_event(
             "User Interaction", f"User {user.username} logged in.", user.id
         )
 
@@ -87,7 +87,7 @@ class AuthService(IAuthService):
             role=user.role.value
         )
 
-    def register(self, request: RegisterRequest):
+    async def register(self, request: RegisterRequest):
         """
         Registers a new user in the system.
 
@@ -113,7 +113,7 @@ class AuthService(IAuthService):
         self.user_repository.add(user)
         self.unit_of_work.commit()
 
-    def refresh_token(self, token: str) -> LoginResponse:
+    async def refresh_token(self, token: str) -> LoginResponse:
         """
         Refreshes access and refresh tokens using a valid refresh token.
 

@@ -16,10 +16,12 @@ from src.api.dependencies import get_event_log_service, get_current_user
 from src.domain.entities.user import User
 from src.domain.entities.event_log import EventLog
 
+from src.application.dtos.event_log_dto import EventLogDto
+
 # Create a FastAPI router with a URL prefix for event logs
 router = APIRouter(prefix="/eventlogs", tags=["Event Logs"])
 
-@router.get("/")
+@router.get("/", response_model=List[EventLogDto])
 def get_logs(
     event_log_service: IEventLogService = Depends(get_event_log_service),
     current_user: User = Depends(get_current_user)

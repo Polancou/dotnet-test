@@ -163,12 +163,85 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         };
     }
 
-    /// <summary>
-    /// Disposes the S3 client.
-    /// </summary>
     public void Dispose()
     {
         _s3Client.Dispose();
+    }
+
+    /// <summary>
+    /// Asynchronously retrieves a file from S3.
+    /// </summary>
+    public async Task<(Stream FileStream, string ContentType)> GetFileAsync(string path)
+    {
+        var key = ParseS3Uri(path);
+
+        try
+        {
+            var request = new GetObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = key
+            };
+
+            var response = await _s3Client.GetObjectAsync(request);
+            return (response.ResponseStream, response.Headers.ContentType);
+        }
+        catch (AmazonS3Exception ex)
+        {
+            _logger?.LogError(ex, "Error retrieving file from S3: {Path}", path);
+            if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new FileNotFoundException($"File not found in S3: {path}");
+            }
+
+            throw new Exception($"Failed to get file from S3: {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously deletes a file from S3.
+    /// </summary>
+    public async Task DeleteFileAsync(string path)
+    {
+        var key = ParseS3Uri(path);
+
+        try
+        {
+            var request = new DeleteObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = key
+            };
+
+            await _s3Client.DeleteObjectAsync(request);
+        }
+        catch (AmazonS3Exception ex)
+        {
+            _logger?.LogError(ex, "Error deleting file from S3: {Path}", path);
+            throw new Exception($"Failed to delete file from S3: {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>
+    /// Parses an S3 URI (s3://bucket/key) to extract the object key.
+    /// </summary>
+    private string ParseS3Uri(string uri)
+    {
+        if (!uri.StartsWith("s3://"))
+        {
+            // If it's not a full S3 URI, assume it's just the key or a path relative to root
+            // But based on SaveFileAsync, we return s3://bucket/key
+            // We can check if it starts with s3://{_bucketName}/
+            return uri; // Simple fallback, or throw
+        }
+
+        var prefix = $"s3://{_bucketName}/";
+        if (uri.StartsWith(prefix))
+        {
+            return uri.Substring(prefix.Length);
+        }
+
+        throw new ArgumentException($"Invalid S3 URI or bucket mismatch: {uri}");
     }
 }
 

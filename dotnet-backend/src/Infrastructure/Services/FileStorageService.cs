@@ -52,4 +52,41 @@ public class FileStorageService : IFileStorageService
         // Return the full file path to the saved file.
         return filePath;
     }
+
+    /// <summary>
+    /// Asynchronously retrieves a file from the local filesystem.
+    /// </summary>
+    public async Task<(Stream FileStream, string ContentType)> GetFileAsync(string path)
+    {
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException($"File not found at path: {path}");
+        }
+
+        var memoryStream = new MemoryStream();
+        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+        {
+            await stream.CopyToAsync(memoryStream);
+        }
+
+        memoryStream.Position = 0;
+
+        // Simple content type detection (or assume based on extension, or generic)
+        var contentType = "application/octet-stream"; // Simplified for local storage
+
+        return (memoryStream, contentType);
+    }
+
+    /// <summary>
+    /// Asynchronously deletes a file from the local filesystem.
+    /// </summary>
+    public Task DeleteFileAsync(string path)
+    {
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+
+        return Task.CompletedTask;
+    }
 }

@@ -19,7 +19,7 @@ public abstract class BaseIntegrationTest : IClassFixture<CustomWebApplicationFa
         _factory = factory;
         _scope = factory.Services.CreateScope();
         _dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        
+
         var config = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
         _connectionString = config.GetConnectionString("DefaultConnection")!;
     }

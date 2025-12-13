@@ -95,7 +95,16 @@ alembic upgrade head
 ## 🧪 Testing
 
 Run the verification scripts:
+Run the unit tests using `pytest`:
+
 ```bash
-python3 tests/test_api.py      # Basic Auth & User tests
-python3 tests/test_features.py # Document, AI, & Log tests
+# Activate virtual environment first
+source venv/bin/activate
+
+# Run all unit tests
+python -m pytest tests/test_unit_cases.py
+
+# Run verification scripts
+python tests/test_api.py
+python tests/test_features.py
 ```

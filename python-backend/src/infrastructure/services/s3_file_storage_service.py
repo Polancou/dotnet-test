@@ -1,7 +1,7 @@
 import uuid
 import boto3
 from botocore.exceptions import ClientError, BotoCoreError
-from typing import Optional
+from typing import Optional, Any
 from src.application.interfaces.interfaces import IFileStorageService
 from src.config import settings
 
@@ -130,4 +130,49 @@ class S3FileStorageService(IFileStorageService):
             'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         }
         return content_types.get(extension, 'application/octet-stream')
+
+    def get_file(self, path: str) -> Any:
+        """
+        Retrieve a file from S3.
+
+        Args:
+            path (str): The S3 URI (s3://bucket/key).
+
+        Returns:
+            Any: The boto3 streaming body of the file content.
+        """
+        key = self._parse_s3_uri(path)
+        try:
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=key)
+            return response['Body']
+        except ClientError as e:
+             if e.response['Error']['Code'] == "NoSuchKey":
+                 raise FileNotFoundError(f"File not found in S3: {path}")
+             raise Exception(f"Failed to get file from S3: {str(e)}")
+
+    def delete_file(self, path: str):
+        """
+        Delete a file from S3.
+
+        Args:
+           path (str): The S3 URI (s3://bucket/key).
+        """
+        key = self._parse_s3_uri(path)
+        try:
+            self.s3_client.delete_object(Bucket=self.bucket_name, Key=key)
+        except ClientError as e:
+            raise Exception(f"Failed to delete file from S3: {str(e)}")
+
+    def _parse_s3_uri(self, uri: str) -> str:
+        """
+        Extract object key from S3 URI.
+        """
+        if not uri.startswith("s3://"):
+             return uri
+        
+        prefix = f"s3://{self.bucket_name}/"
+        if uri.startswith(prefix):
+             return uri[len(prefix):]
+        
+        raise ValueError(f"Invalid S3 URI or bucket mismatch: {uri}")
 

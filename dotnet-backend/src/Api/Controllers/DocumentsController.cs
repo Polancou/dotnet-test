@@ -70,4 +70,61 @@ public class DocumentsController(IDocumentService documentService) : ControllerB
         // Return the documents as JSON
         return Ok(documents);
     }
+
+    /// <summary>
+    /// Downloads a specific document.
+    /// </summary>
+    /// <param name="id">The ID of the document to download.</param>
+    /// <returns>
+    /// 200 OK with the file stream if successful;<br/>
+    /// 404 Not Found if document doesn't exist;<br/>
+    /// 403 Forbidden if user doesn't own the document.
+    /// </returns>
+    [HttpGet("{id}/download")]
+    public async Task<IActionResult> DownloadDocument(int id)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var (stream, contentType, fileName) = await documentService.DownloadDocumentAsync(id, userId);
+
+            return File(stream, contentType, fileName);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
+    /// <summary>
+    /// Deletes a specific document.
+    /// </summary>
+    /// <param name="id">The ID of the document to delete.</param>
+    /// <returns>
+    /// 204 No Content if successful;<br/>
+    /// 404 Not Found if document doesn't exist;<br/>
+    /// 403 Forbidden if user doesn't own the document.
+    /// </returns>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteDocument(int id)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            await documentService.DeleteDocumentAsync(id, userId);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
 }
